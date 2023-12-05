@@ -1,7 +1,7 @@
 "use strict";
 
-let selectCityDropDown = document.getElementById("selectCityDropDown");
-
+const selectCityDropDown = document.getElementById("selectCityDropDown");
+const outputTable = document.getElementById("outputTable");
 
 let cities = [
     { city: "Benbrook", state: "TX", Latitude: 32.6732, Longitude: -97.4606 },
@@ -54,10 +54,12 @@ function selectCityDropDownPopulate() {
 }
 
 function selectCityDropDownOnChange(){
-    let city = cities.find( x => x.id == selectCityDropDown.value)
+
+    let city = cities.find( city => city.id == selectCityDropDown.value)
+
+    outputTableClear();
 
     if(city == undefined) {
-        clearOutputTable();
         return;
     }
 
@@ -67,10 +69,15 @@ function selectCityDropDownOnChange(){
 
     console.log(firstUrl);
 
-    fetch(firstUrl).then(r => r.json()).then(
-        data => {
-            let forecastUrl = data.properties.forecast;
-            console.log(forecastUrl);
+    fetch(firstUrl)
+        .then(r => r.json())
+        .then(
+            data => {
+                let forecastUrl = data.properties.forecast;
+                //next step is to use this url for a secondary call!
+                console.log(forecastUrl);
+                getForecast(forecastUrl);
+
         }
     );
 
@@ -81,8 +88,48 @@ function selectCityDropDownOnChange(){
 
 }
 
-function clearOutputTable(){
+function getForecast(forecastUrl){
+    fetch(forecastUrl)
+        .then( r => r.json())
+        .then( data => {
+            let periods = data.properties.periods;
+            outputTablePopulate(periods);
+//console.log(data);
+        });
+}
 
+function outputTablePopulate(periods){
+
+    for(let period of periods){
+        let periodtext = period.name;
+        let temperature = "Temperature " + period.temperature + " " + period.temperatureUnit;
+        let winds = "Winds " + period.windDirection + " " + period.windSpeed;
+        let forecast = period.shortForecast;   
+        
+        outputTableAddRow(periodtext, temperature, winds, forecast);
+    }
+
+    console.log(periods);
+
+}
+
+function outputTableAddRow(period, temperature, winds, forecast){
+    let row = outputTable.insertRow(-1);
+    let cell1 = row.insertCell(0);
+    cell1.innerHTML = period;
+
+    let cell2 = row.insertCell(1);
+    cell2.innerHTML = temperature;
+
+    let cell3 = row.insertCell(2);
+    cell3.innerHTML = winds;
+
+    let cell4 = row.insertCell(3);
+    cell4.innerHTML = forecast;
+}
+
+function outputTableClear(){
+    outputTable.innerHTML = "";
 }
 
 function compareCities(a, b) {
